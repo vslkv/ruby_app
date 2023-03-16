@@ -1,0 +1,19 @@
+Description=The best ruby app, podnyatoe na kolenke
+After=syslog.target network.target remote-fs.target nss-lookup.target solr.service
+
+[Service]
+User=root
+Type=simple
+WorkingDirectory=/app
+ExecStart=/app/startup.sh
+ExecReload=/bin/kill -TSTP $MAINPID
+Restart=always
+syslogIdentifier=puma
+
+[Install]
+WantedBy=multi-user.target
+Restart=always
+syslogIdentifier=puma
+
+[Install]
+WantedBy=multi-user.target

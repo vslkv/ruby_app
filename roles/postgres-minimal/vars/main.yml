@@ -1,0 +1,5 @@
+---
+# vars file for postgres-minimal
+db_user: app_db_user
+db_password: password
+db_name: app_db

@@ -1,0 +1,5 @@
+[postgres]
+postgres_master ansible_host=192.168.51.2 anshible_ssh_user=vagrant ansible_ssh_password=vagrant
+
+[postgres:vars]
+ansible_python_interpreter=/usr/bin/python3

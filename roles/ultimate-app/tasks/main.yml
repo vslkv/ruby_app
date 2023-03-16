@@ -1,0 +1,80 @@
+---
+# tasks file for ultimate-app
+- name: "Install repo deps"
+  ansible.builtin.yum:
+    name:
+      - centos-release-scl
+      - scl-utils
+      - epel-release
+    state: latest
+
+- name: "Install build deps"
+  ansible.builtin.yum:
+    name:
+      - git
+      - rh-ruby26
+      - rh-ruby26-ruby-devel
+      - libxml2-devel
+      - "@Development Tools"
+      - postgresql-devel
+      - nodejs
+    state: latest
+
+- name: "Clone repo"
+  ansible.builtin.git:
+    repo: "https://{{ git_user | urlencode }}:{{ git_password | urlencode }}@gitlab.slurm.io/edu/xpaste_practicum.git"
+    dest: "/app"
+
+- name: "Install bundler"
+  ansible.builtin.shell: |
+    scl enable rh-ruby26 -- gem install bundler:1.16.2
+  args:
+    chdir: /app/
+
+- name: "Install nokogiri"
+  ansible.builtin.shell: |
+    scl enable rh-ruby26 -- gem install nokogiri:1.8.2
+  args:
+    chdir: /app/
+
+- name: "Bundle config"
+  ansible.builtin.shell: |
+    scl enable rh-ruby26 -- bundle config build.nokogiri --use-system-libraries
+  args:
+    chdir: /app/
+
+- name: "Bundle install"
+  ansible.builtin.shell: |
+    scl enable rh-ruby26 -- bundle install --clean --no-cache --without development
+  args:
+    chdir: /app/
+  register: install_result
+  changed_when: "install_result.stdout.find('Bundle complete!') != -1"
+  ignore_errors: true
+
+- name: "End playbook if not all dependencies are installed"
+  meta: end_play
+  when:
+    -  install_result.stdout.find('Bundle complete!') == -1
+
+- name: "Copy service template"
+  ansible.builtin.template:
+    src: service.j2
+    dest: /etc/systemd/system/app.service
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+
+- name: "Copy startup template"
+  ansible.builtin.template:
+    src: startup.j2
+    dest: /app/startup.sh
+    owner: root
+    group: root
+    mode: u=rwx,g=r,o=r
+
+- name: "Start the app"
+  ansible.builtin.systemd:
+    state: started
+    daemon_reload: true
+    name: app
