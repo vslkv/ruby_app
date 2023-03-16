@@ -2,11 +2,6 @@
 - name: 'Initial install and configuration'
   become: true
   hosts: postgres
-  vars:
-    postgres_users_no_log: false # включаем отображение паролей в консоле для отладки, само собой в продакшене это надо выключить
-    postgresql_users:
-      - name: postgres
-        password: password
   roles:
     - ultimate-app
     - geerlingguy.nginx
